@@ -1,0 +1,51 @@
+{
+    "name": "anglr-formatter",
+    "version": "0.0.0-placeholder",
+    "description": "Code formatter for typescript, for Anglr projects",
+    "main": "dist/index.js",
+    "scripts": {
+        "build": "npm run tsc",
+        "clean": "rimraf generators/**/*.js generators/**/*.map",
+        "clean:deps": "rimraf package-lock.json node_modules",
+        "clean:all": "npm run clean && npm run clean:deps",
+        "tsc": "tsc",
+        "tsc:w": "tsc -w",
+        "version:placeholder": "replace-in-file /\\\"version\\\":\\s\\\".*?\\\"/g \"\\\"version\\\": \\\"0.0.0-placeholder\\\"\" package.json --isRegex",
+        "version:git": "ngv -e \"replace-in-file 0.0.0-placeholder $GIT_VERSION package.json && echo $GIT_VERSION > version.bak\"",
+        "version:build": "ngv -e \"echo $GIT_VERSION > version.bak\"",
+        "prepublishOnly": "npm run bundle && npm run version:placeholder && npm run version:git",
+        "postpublish": "npm run version:placeholder && npm run clean",
+        "bundle": "npm run clean && npm run build",
+        "deploy": "npm publish --loglevel error",
+        "deploy:next": "npm publish --tag next --loglevel error",
+        "start": "npm run tsc:w"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/ressurectit/anglr-formatter.git"
+    },
+    "keywords": [
+        "angular",
+        "formatter",
+        "typescript"
+    ],
+    "author": "kukjevov",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/ressurectit/anglr-formatter/issues"
+    },
+    "homepage": "https://github.com/ressurectit/anglr-formatter",
+    "dependencies": {
+        "chalk": "3.0.0",
+        "ts-morph": "7.0.0",
+        "extend": "3.0.2"
+    },
+    "devDependencies": {
+        "@types/node": "13.9.0",
+        "@types/extend": "3.0.1",
+        "rimraf": "3.0.2",
+        "typescript": "3.8.3",
+        "replace-in-file": "5.0.2",
+        "npm-git-version": "1.1.1"
+    }
+}
