@@ -76,7 +76,6 @@ export class AnglrFileFormatter
         this._formatImports();
         this._formatDecoratorsArg();
 
-        console.log(this._updateJsonObjects);
         // this._updateImports();
         // this._updateJsonObjects(this._sourceFile);
 
@@ -162,10 +161,10 @@ export class AnglrFileFormatter
     /**
      * Write changes of code to node
      * @param node - Node which content will be replaced
-     * @param indLevel - Indentantion level
+     * @param indLevel - Indentation level
      * @param source - Source string
      */
-    private _writeChanges(node: Node, indLevel: number, source: string)
+    private _writeChangesOverrideQueue(node: Node, indLevel: number, source: string)
     {
         node.replaceWithText(writer =>
         {
@@ -173,6 +172,51 @@ export class AnglrFileFormatter
 
             writer.write(source);
         });
+    }
+
+    /**
+     * Writes block of string by lines
+     * @param writer - Writer used for writing code
+     * @param source - Source string
+     */
+    private _writeBlock(source: string, indent: string|number, skipFirst: boolean): string
+    {
+        let lines = source.split(this._eol);
+        let writer = new CodeBlockWriter(
+        {
+            newLine: this._eol,
+            useTabs: false,
+            useSingleQuote: true,
+            indentNumberOfSpaces: 4
+        });
+
+        writer.setIndentationLevel(indent as any);
+
+        lines.forEach((line, index) =>
+        {
+            //no new line at end
+            if(lines.length - 1 == index)
+            {
+                writer.write(line);
+            }
+            else
+            {
+                //do not indent first line
+                if(skipFirst && index == 0)
+                {
+                    writer.withIndentationLevel(0, () =>
+                    {
+                        writer.write(line);
+                    });
+                }
+                else
+                {
+                    writer.writeLine(line);
+                }
+            }
+        });
+
+        return writer.toString();
     }
 
     /**
@@ -255,7 +299,7 @@ export class AnglrFileFormatter
 
         this._formatJson(0, writer, lineGenerator);
 
-        return writer.toString().trim();
+        return writer.toString();
     }
 
     /**
@@ -399,6 +443,7 @@ export class AnglrFileFormatter
                 return;
             }
 
+            //format arguments
             expression.getArguments().forEach(arg => 
             {
                 //only apply to JSON Object, Array
@@ -408,97 +453,61 @@ export class AnglrFileFormatter
                     return;
                 }
 
-                let indLevel = arg.getIndentationLevel() > 0 ? arg.getIndentationLevel() - 1 : 0;
                 let sourceText = arg.getFullText();
 
                 sourceText = this._removeInitialSpaces(/^\s*?( *){/, sourceText);
-                sourceText = this._formatJsonString(sourceText);
+                sourceText = this._formatJsonString(sourceText).trim();
 
-                this._writeChanges(arg, indLevel, sourceText);
+                this._writeChangesOverrideQueue(arg, 0, sourceText);
             });
+
+            //get and update arguments
+            let args = expression.getArguments();
+            let argsStrings = args.map(arg => arg.getFullText());
+
+            for(let arg of args)
+            {
+                expression.removeArgument(arg);
+            };
 
             sourceText = expression.getFullText();
-            sourceText = sourceText.replace(new RegExp(`(${expression.getExpression().getText()}\\()\\s*`), `$1${this._eol}${this._getIndentText(expression.getIndentationLevel() * 4)}`);
-            
-            expression.replaceWithText(sourceText);
-        });
-    }
 
-    /**
-     * Removes inside spaces of call expressions
-     * @param call - Call expression to be modified
-     */
-    private _removeCallExpressionInsideSpaces(call: CallExpression)
-    {
-        if (call.wasForgotten())
-        {
-            return;
-        }
-
-        let source = call.getFullText();
-        let indLevel = call.getIndentationLevel() > 0 ? call.getIndentationLevel() - 1 : 0;
-
-        source = source.replace(new RegExp(`^(.*?\\()\\s*?(${this._eol}(?:{|\[]))`), '$1$2');
-        source = source.replace(/\s*\)$/, ')');
-
-        this._writeChanges(call, indLevel, source);
-    }
-
-    /**
-     * Updates source file all json object
-     */
-    private _updateJsonObjects(node: Node): void
-    {
-        node.getDescendantsOfKind(ts.SyntaxKind.ObjectLiteralExpression)
-            .forEach(obj =>
+            expression.replaceWithText(writer =>
             {
-                if (obj.wasForgotten())
+                sourceText = sourceText.replace(/\)\s*$/, '');
+                sourceText = sourceText.replace(/\(\s+/, '(');
+                
+                writer.queueIndentationLevel(0);
+
+                //align parameters at first arg
+                if(args.length > 1)
                 {
-                    return;
+                    writer.write(sourceText);
+
+                    argsStrings.forEach((arg, index) =>
+                    {
+                        arg = arg.trim();
+
+                        writer.write(this._writeBlock(arg, this._getIndentText(sourceText.length + 1 + (expression.getIndentationLevel() * 4)), index == 0));
+
+                        if(argsStrings.length - 1 > index)
+                        {
+                            writer.write(',');
+                            writer.newLine();
+                        }
+                    });
+                }
+                //align parameters at start of expression
+                else
+                {
+                    argsStrings[0] = argsStrings[0].trim();
+
+                    writer.writeLine(sourceText);
+                    writer.write(this._writeBlock(argsStrings[0], expression.getIndentationLevel(), false));
                 }
 
-                let source = obj.getFullText();
-                let indLevel = obj.getIndentationLevel() > 0 ? obj.getIndentationLevel() - 1 : 0;
-
-
-                //skipping single line definition
-                if (source.indexOf(this._eol) < 0)
-                {
-                    return;
-                }
-
-                //remove first enter
-                source = source.replace(new RegExp(`^${this._eol}`), '');
-
-                //get sice of initial indent
-                let matches = source.match(/^\s+/);
-                let initialSpaces = '';
-
-                if (matches)
-                {
-                    initialSpaces = matches[0];
-                }
-
-                //remove initial spaces
-                source = source.replace(new RegExp(`^${initialSpaces}`, 'gm'), '');
-
-
-                //add new line at start
-                if (!source.startsWith(this._eol))
-                {
-                    console.log(source, indLevel);
-                    source = this._eol + source;
-                }
-
-                this._writeChanges(obj, indLevel, source);
-                obj.getDescendantsOfKind(ts.SyntaxKind.ObjectLiteralExpression).forEach(nestedObj => this._updateJsonObjects(nestedObj));
-
-                let parent = obj.getParent();
-
-                if(parent instanceof CallExpression)
-                {
-                    this._removeCallExpressionInsideSpaces(parent);
-                }
+                writer.write(")");
             });
+        });
     }
 }
