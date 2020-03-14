@@ -40,6 +40,7 @@
     },
     "homepage": "https://github.com/ressurectit/anglr-formatter",
     "dependencies": {
+        "@jscrpt/common": "1.1.1",
         "chalk": "3.0.0",
         "ts-morph": "7.0.0",
         "extend": "3.0.2",

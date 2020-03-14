@@ -57,6 +57,16 @@ export abstract class FormatterBase implements Formatter
     }
 
     /**
+     * Counts character occurences in input string
+     * @param input - Input string to be inspected
+     * @param character - Character to be counted
+     */
+    protected _countCharacters(input: string, character: string)
+    {
+        return input.split(character).length - 1;
+    }
+
+    /**
      * Writes source file string as char codes
      * @param source - Source to be written as char codes
      */
@@ -113,7 +123,18 @@ export abstract class FormatterBase implements Formatter
             //no new line at end
             if(lines.length - 1 == index)
             {
-                writer.write(line);
+                //first is last and skip first is set
+                if(skipFirst && lines.length == 1)
+                {
+                    writer.withIndentationLevel(0, () =>
+                    {
+                        writer.write(line);
+                    });
+                }
+                else
+                {
+                    writer.write(line);
+                }
             }
             else
             {
@@ -155,6 +176,23 @@ export abstract class FormatterBase implements Formatter
     }
 
     /**
+     * Gets line generator for provided text
+     * @param text - Text to be split into lines
+     */
+    protected _getLineGenerator(text: string): Generator<string, void, unknown>
+    {
+        return function*(text: string, eol: string)
+        {
+            let lines = text.split(eol);
+
+            for(let line of lines)
+            {
+                yield line;
+            }
+        }(text, this._eol);
+    }
+
+    /**
      * Formats JSON string
      * @param jsonText - JSON object, array to be formatted
      */
@@ -168,15 +206,7 @@ export abstract class FormatterBase implements Formatter
             return jsonText;
         }
         
-        let lineGenerator = function*(jsonText: string, eol: string)
-        {
-            let jsonLines = jsonText.split(eol);
-
-            for(let line of jsonLines)
-            {
-                yield line;
-            }
-        }(jsonText, this._eol);
+        let lineGenerator = this._getLineGenerator(jsonText);
 
         let writer = new CodeBlockWriter(
         {
