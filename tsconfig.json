@@ -13,12 +13,14 @@
         "noUnusedParameters": true,
         "strict": true,
         "outDir": "dist",
+        "newLine": "LF",
         "types": 
         [
             "node"
         ]
     },
-    "include": [
+    "include": 
+    [
         "src/**/*.ts"
     ],
     "exclude": 

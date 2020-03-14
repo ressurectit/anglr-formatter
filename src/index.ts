@@ -1,8 +1,22 @@
 import * as path from 'path';
 import * as fs from 'fs';
 import * as chalk from 'chalk';
+import * as glob from 'glob';
+import * as yargs from 'yargs';
+import * as extend from 'extend';
 
 import {AnglrFileFormatter} from './anglrFileFormatter';
+
+/**
+ * Configuration arguments from command line
+ */
+interface AnglrFormatterArgs
+{
+    /**
+     * Input path used for searching for files to be formatted
+     */
+    input: string;
+}
 
 /**
  * Custom typescript formatter build on top of typescript formatter
@@ -35,6 +49,7 @@ export class AnglrFormatter
 
         try
         {
+            console.log(chalk.whiteBright(`Formatting file '${filePath}'.`));
             fileFormatter = new AnglrFileFormatter(filePath);
         }
         catch(e)
@@ -51,86 +66,74 @@ export class AnglrFormatter
     }
 }
 
+/**
+ * Performs anglr formatting
+ * @param filePath - Path to file that is going to be formatted
+ */
 export function format(filePath: string)
 {
-    console.log(filePath);
+    new AnglrFormatter().formatFile(filePath);
 }
 
-new AnglrFormatter().formatFile(path.join(__dirname, "test.ts"));
-
-// /^\s+(.*?:)\s*(\[|{)\s*$/
-
-// let xxx = (((sourceFile?.getStatements()[10] as ClassDeclaration).getMembers()[2] as PropertyDeclaration).getDecorators()[0].getExpression() as CallExpression).getArguments()[0];
-
-//     console.log(xxx.getIndentationLevel());
-//     console.log(xxx.getFullText().indexOf('\n'));
-
-//     xxx.replaceWithText(writer =>
-//         {
-//             console.log(writer.getIndentationLevel());
-//         })
-
-// let xxx = ((sourceFile?.getStatements()[10] as ClassDeclaration).getDecorators()[0].getExpression() as CallExpression).getArguments();
-
-// xxx.forEach((xx) =>
-// {
-//     let full = xx.getFullText();
-
-//     console.log(xx.getIndentationLevel());
-
-//     full = '\n' + full;
-
-    
-//     xx.replaceWithText(writer =>
-//     {
-//         writer.queueIndentationLevel(0);
-//         writer.write(full);
-//     });
-    
-
-//     console.log(xx.getIndentationLevel());
-
-//     console.log(full);
-// })
-
-
-
-// if(!full.startsWith('\r\n') && !full.startsWith('\n') && !full.startsWith('\r'))
+/**
+ * Class used for obtaining files that are going to be formatted
+ */
+export class FileObtainer
 {
-    // console.log(full);
+    //######################### private fields #########################
 
-    // full = full.replace(/\({/, '(\r\n{');
+    /**
+     * Formatter used for formatting found files
+     */
+    private _formatter: AnglrFormatter;
 
-    // xxx.replaceWithText(full);
+    //######################### constructor #########################
+    constructor()
+    {
+        this._formatter = new AnglrFormatter();
+    }
 
-    // full = '\r\n' + full;
+    //######################### public methods #########################
 
-    // xxx.replaceWithText((writer =>
-    // {
-    //     console.log('xxxxxxx', writer.getIndentationLevel());
-    //     writer.setIndentationLevel(0);
+    /**
+     * Format files that are found using command line arguments
+     */
+    public formatFoundFilesUseCmdArgs()
+    {
+        const argv: AnglrFormatterArgs = yargs
+            .command('$0 [input]', 'Runs formatting.', builder =>
+            {
+                builder.positional("input",
+                {
+                    alias: 'i',
+                    description: "Path used for finding files for formatting, supports globs",
+                    default: "**/*.ts"
+                });
+    
+                return builder;
+            })
+            .epilog('Copyright RessurectIT 2020')
+            .alias('h', 'help')
+            .help()
+            .parse() as any;
 
-    //     writer.hangingIndent(() =>
-    //     {
-    //         writer.write('\r\n');
-    //         writer.write('{');
-    //         writer.write('\r\n');
-    //         writer.write('}');
-    //     })
+        this.formatFoundFiles(argv.input);
+    }
 
-    //     // writer.withIndentationLevel(8, () =>
-    //     // {
-    //     //     writer.write(full)
-    //     // });
+    /**
+     * Formats files that are found at provided path
+     * @param inputPath - Path used for finding files for formatting, supports globs
+     * @param options - Options used for finding files
+     */
+    public formatFoundFiles(inputPath: string, options?: glob.IOptions)
+    {
+        let files = glob.sync(inputPath,
+                              extend({},
+                                     {
+                                         absolute: true
+                                     },
+                                     options));
 
-    //     // writer.hangingIndent()
-    // }));
-
-    // console.log('xxx', xxx.getIndentationLevel())
-    // console.log(xxx.getIndentationText(0))
+        files.forEach(file => this._formatter.formatFile(file));
+    }
 }
-
-// xxx.formatText({indentStyle: 0, indentSize: 0, indentMultiLineObjectLiteralBeginningOnBlankLine: false})
-
-
-// console.log(xxx.getFullText())

@@ -3,9 +3,12 @@
     "version": "0.0.0-placeholder",
     "description": "Code formatter for typescript, for Anglr projects",
     "main": "dist/index.js",
+    "bin": {
+        "anglr-formatter": "dist/bin.js"
+    },
     "scripts": {
         "build": "npm run tsc",
-        "clean": "rimraf generators/**/*.js generators/**/*.map",
+        "clean": "rimraf dist",
         "clean:deps": "rimraf package-lock.json node_modules",
         "clean:all": "npm run clean && npm run clean:deps",
         "tsc": "tsc",
@@ -38,11 +41,15 @@
     "dependencies": {
         "chalk": "3.0.0",
         "ts-morph": "7.0.0",
-        "extend": "3.0.2"
+        "extend": "3.0.2",
+        "glob": "7.1.6",
+        "yargs": "15.3.0"
     },
     "devDependencies": {
         "@types/node": "13.9.0",
         "@types/extend": "3.0.1",
+        "@types/glob": "7.1.1",
+        "@types/yargs": "15.0.4",
         "rimraf": "3.0.2",
         "typescript": "3.8.3",
         "replace-in-file": "5.0.2",
