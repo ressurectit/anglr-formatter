@@ -2,6 +2,7 @@
     "name": "anglr-formatter",
     "version": "0.0.0-placeholder",
     "description": "Code formatter for typescript, for Anglr projects",
+    "typings": "dist/index.d.ts",
     "main": "dist/index.js",
     "bin": {
         "anglr-formatter": "dist/bin.js"

@@ -1,3 +1,4 @@
+[![npm version](https://badge.fury.io/js/anglr-formatter.svg)](https://badge.fury.io/js/anglr-formatter)
 [![Build status](https://ci.appveyor.com/api/projects/status/ca0fl30d1imx14re?svg=true)](https://ci.appveyor.com/project/kukjevov/anglr-formatter)
 
 # Angular Formatter
