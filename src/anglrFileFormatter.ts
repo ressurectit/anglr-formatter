@@ -27,7 +27,12 @@ export class AnglrFileFormatter
     /**
      * Detected EOL for provided file
      */
-    private _eol: NewLineType;
+    private _eol: NewLineType = '\n';
+
+    /**
+     * Original EOL for provided file
+     */
+    private _originalEol: NewLineType;
 
     /**
      * Array of custom formatters
@@ -47,7 +52,7 @@ export class AnglrFileFormatter
             throw new Error(`Source file '${filePath}' could not be found!`);
         }
 
-        this._eol = this._getEOL(this._sourceFile.getFullText());
+        this._originalEol = this._getEOL(this._sourceFile.getFullText());
 
         //registers formatters
         this._formatters.push(ImportFormatter);
@@ -71,7 +76,7 @@ export class AnglrFileFormatter
                                         indentSize: 4,
                                         tabSize: 4,
                                         insertSpaceAfterOpeningAndBeforeClosingNonemptyBraces: false,
-                                        newLineCharacter: this._eol
+                                        newLineCharacter: '\n'
                                     },
                                     format));
     }
@@ -91,6 +96,7 @@ export class AnglrFileFormatter
      */
     public save(): void
     {
+        this._sourceFile.replaceWithText(this._sourceFile.getFullText().replace(/\n/g, this._originalEol));
         this._sourceFile.saveSync();
     }
 
