@@ -39,17 +39,35 @@ export class AnglrFileFormatter
      */
     private _formatters: FormatterType[] = [];
 
+    //######################### public properties #########################
+
+    /**
+     * Gets content of file
+     */
+    public get content(): string
+    {
+        return this._sourceFile.getFullText();
+    }
+
     //######################### constructor #########################
-    constructor(filePath: string)
+    constructor(filePathOrContent: string, isContent: boolean = false)
     {
         this._project = new Project();
-        this._project.addSourceFileAtPath(filePath);
 
-        this._sourceFile = this._project.getSourceFile(filePath)!;
+        if(isContent)
+        {
+            this._sourceFile = this._project.createSourceFile('formatted-tmp.ts', filePathOrContent);
+        }
+        else
+        {
+            this._project.addSourceFileAtPath(filePathOrContent);
+            this._sourceFile = this._project.getSourceFile(filePathOrContent)!;
+        }
+
 
         if (!this._sourceFile)
         {
-            throw new Error(`Source file '${filePath}' could not be found!`);
+            throw new Error(`Source file '${filePathOrContent}' could not be found!`);
         }
 
         this._originalEol = this._getEOL(this._sourceFile.getFullText());
@@ -92,6 +110,8 @@ export class AnglrFileFormatter
         this._formatters
             .map(formatterType => new formatterType(this._eol, this._sourceFile, options))
             .forEach(formatter => formatter.format());
+
+        this._sourceFile.replaceWithText(this._sourceFile.getFullText().replace(/\n/g, this._originalEol));
     }
 
     /**
@@ -99,7 +119,6 @@ export class AnglrFileFormatter
      */
     public save(): void
     {
-        this._sourceFile.replaceWithText(this._sourceFile.getFullText().replace(/\n/g, this._originalEol));
         this._sourceFile.saveSync();
     }
 

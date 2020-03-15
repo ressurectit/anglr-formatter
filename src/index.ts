@@ -38,8 +38,8 @@ export class AnglrFormatter
     private _anglrOptions: FormatterOptions;
 
     //######################### constructor #########################
-    constructor(tsOptions?: FormatCodeSettings,
-                anglrOptions?: FormatterOptions)
+    constructor(tsOptions?: FormatCodeSettings|null,
+                anglrOptions?: FormatterOptions|null)
     {
         this._tsOptions = tsOptions ?? {};
         this._anglrOptions = anglrOptions ?? {};
@@ -84,6 +84,32 @@ export class AnglrFormatter
         fileFormatter.typescriptFormat(this._tsOptions);
         fileFormatter.anglrFormat(this._anglrOptions);
         fileFormatter.save();
+    }
+
+    /**
+     * Formats provided content
+     * @param content - Content that is going to be formatted
+     */
+    public formatFileContent(content: string): string|null
+    {
+        let fileFormatter: AnglrFileFormatter;
+
+        try
+        {
+            console.log(chalk.whiteBright(`Formatting file content.`));
+            fileFormatter = new AnglrFileFormatter(content, true);
+        }
+        catch(e)
+        {
+            console.log(chalk.red(e));
+
+            return null;
+        }
+
+        fileFormatter.typescriptFormat(this._tsOptions);
+        fileFormatter.anglrFormat(this._anglrOptions);
+        
+        return fileFormatter.content;
     }
 }
 
