@@ -4,6 +4,8 @@ import {isBlank} from '@jscrpt/common';
 import {FormatterBase} from '../formatterBase';
 import {Formatter} from './formatters.interface';
 
+//TODO - rework this to new way
+
 /**
  * Class that represents formatter for formatting constructors params
  */

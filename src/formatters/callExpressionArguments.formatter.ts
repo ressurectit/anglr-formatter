@@ -23,8 +23,16 @@ export class CallExpressionArgumentsFormatter extends FormatterBase implements F
                                 !callExpr.getFirstAncestorByKind(ts.SyntaxKind.CallExpression))
             .forEach(callExpr =>
             {
-                //skipping single line statements
-                if(callExpr.getText().indexOf(this._eol) < 0)
+                let args = callExpr.getArguments();
+
+                //skipping expressions without arguments
+                if(!args.length)
+                {
+                    return;
+                }
+
+                //skipping for single line arguments
+                if(this._isSingleLine(args[0].getFullStart(), args[args.length - 1].getEnd()))
                 {
                     return;
                 }
@@ -37,9 +45,13 @@ export class CallExpressionArgumentsFormatter extends FormatterBase implements F
                                       callExpr.getFirstAncestorByKind(ts.SyntaxKind.ReturnStatement) ||
                                       callExpr.getFirstAncestorByKind(ts.SyntaxKind.ExpressionStatement)!;
 
-                this._debugSource(this._sourceFile.getFullText().substring(statementParent.getFullStart(), callExpr.getArguments()[0].getStart()).trim());
-                console.log(statementParent.getIndentationLevel());
+                let baseIndent = this._getExpressionArgsIndent(this._getSourceText(statementParent.getFullStart(), args[0].getFullStart()), callExpr.getIndentationLevel());
+                let splitSourceText = this._getSplitFunctionSource(callExpr);
 
+                this._alignExpressionArguments(callExpr,
+                                               splitSourceText, 
+                                               callExpr.getArguments().map(arg => arg.getFullText()),
+                                               (callExpr.getIndentationLevel() * 4) + baseIndent - splitSourceText[0].length);
             });
     }
 
@@ -52,18 +64,20 @@ export class CallExpressionArgumentsFormatter extends FormatterBase implements F
      */
     private _formatExpression(expr: CallExpression, baseIndent: number = 0)
     {
-        //skipping single line expression
-        if(expr.getText().indexOf(this._eol) < 0)
-        {
-            return;
-        }
-
-        if(expr.getExpression().getText() != 'extend')
-        {
-            return;
-        }
-
         let args = expr.getArguments();
+
+        //skipping expressions without arguments
+        if(!args.length)
+        {
+            return;
+        }
+
+        //skipping for single line arguments
+        if(this._isSingleLine(args[0].getFullStart(), args[args.length - 1].getEnd()))
+        {
+            return;
+        }
+
         let argsStrings: string[] = [];
 
         //format json arguments
@@ -79,13 +93,8 @@ export class CallExpressionArgumentsFormatter extends FormatterBase implements F
             }
 
             argsStrings.push(arg.getText());
-
-            //drop old arguments
-            expr.removeArgument(arg);
         });
 
-        let sourceText = expr.getText();
-
-        this._alignExpressionArguments(expr, sourceText, argsStrings, baseIndent);
+        this._alignExpressionArguments(expr, this._getSplitFunctionSource(expr), argsStrings, baseIndent);
     }
 }

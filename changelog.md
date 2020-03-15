@@ -11,3 +11,4 @@
     - supports reordering of *import* statements
     - supports reformating of *decorator* declarations
     - supports reformating of *constructor* parameters declaration
+    - supports reformating of *call expression* arguments

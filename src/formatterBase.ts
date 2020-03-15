@@ -2,7 +2,7 @@ import CodeBlockWriter from 'code-block-writer';
 import {SourceFile, Node, CallExpression, ConstructorDeclaration, FunctionDeclaration, MethodDeclaration} from 'ts-morph';
 import * as extend from 'extend';
 
-import {NewLineType} from './misc';
+import {NewLineType, SplitSourceText} from './misc';
 import {Formatter, FormatterOptions} from './formatters/formatters.interface';
 
 /**
@@ -122,7 +122,7 @@ export abstract class FormatterBase implements Formatter
      * @param cutStart - Start index of cut
      * @param cutEnd - End index of cut
      */
-    protected _getSplitSourceText(exprStart: number, exprEnd: number, cutStart: number, cutEnd: number): [string, string|null, string|null]
+    protected _getSplitSourceText(exprStart: number, exprEnd: number, cutStart: number, cutEnd: number): SplitSourceText
     {
         return [this._getSourceText(exprStart, cutStart < 0 ? exprEnd : cutStart), cutStart < 0 ? null : this._getSourceText(cutStart, cutEnd), cutStart < 0 ? null : this._getSourceText(cutEnd, exprEnd)];
     }
@@ -131,7 +131,7 @@ export abstract class FormatterBase implements Formatter
      * Gets split source into 3 parts, before arguments, arguments and after arguments, if there are no arguments only first item will be set, rest is null
      * @param expr - Expression which will be split into 3 part source texts
      */
-    protected _getSplitFunctionSource(expr: CallExpression|ConstructorDeclaration|FunctionDeclaration|MethodDeclaration): [string, string|null, string|null]
+    protected _getSplitFunctionSource(expr: CallExpression|ConstructorDeclaration|FunctionDeclaration|MethodDeclaration): SplitSourceText
     {
         let argsParsStart: number;
         let argsParsEnd: number = 0;
@@ -159,6 +159,16 @@ export abstract class FormatterBase implements Formatter
         }
 
         return this._getSplitSourceText(expr.getFullStart(), expr.getEnd(), argsParsStart, argsParsEnd);
+    }
+
+    /**
+     * Tests part of code whether it contains new lines
+     * @param from - Start index of code to be tested
+     * @param to - End index of code to be tested
+     */
+    protected _isSingleLine(from: number, to: number): boolean
+    {
+        return this._getSourceText(from, to).indexOf(this._eol) < 0
     }
 
     /**
@@ -417,31 +427,48 @@ export abstract class FormatterBase implements Formatter
     }
 
     /**
+     * Finds indent for arguments relative to expression
+     * @param sourceText - Source text to be used for searching
+     * @param currentIdent - Current indentation level
+     */
+    protected _getExpressionArgsIndent(sourceText: string, currentIdent: number): number
+    {
+        let lines = sourceText.trim().split(this._eol);
+
+        return lines[lines.length - 1].length - (lines.length > 1 ? (currentIdent * 4) : 0);
+    }
+
+    /**
      * Replaces source text of call expression, aligning expression arguments
      * @param expr - Call expression to be which args should be aligned
-     * @param sourceText - Source text of expression
+     * @param sourceText - Source text of expression, split into 3 parts
      * @param argsStrings - New args as source strings
      * @param baseIndent - Base indent which is added
      */
-    protected _alignExpressionArguments(expr: CallExpression, sourceText: string, argsStrings: string[], baseIndent: number = 0)
+    protected _alignExpressionArguments(expr: CallExpression, sourceText: SplitSourceText, argsStrings: string[], baseIndent: number = 0)
     {
+        let [start, args, end] = sourceText;
+
+        //do nothing if no arguments are present
+        if(!args || !end)
+        {
+            return;
+        }
+
         expr.replaceWithText(writer =>
         {
-            sourceText = sourceText.replace(/\)\s*$/, '');
-            sourceText = sourceText.replace(/\(\s+/, '(');
-            
             writer.queueIndentationLevel(0);
 
             //align parameters at first arg
             if(argsStrings.length > 1)
             {
-                writer.write(sourceText);
+                writer.write(start);
 
                 argsStrings.forEach((arg, index) =>
                 {
                     arg = arg.trim();
 
-                    writer.write(this._writeBlock(arg, this._getIndentText(sourceText.length + baseIndent), index == 0));
+                    writer.write(this._writeBlock(arg, this._getIndentText(this._getExpressionArgsIndent(start, expr.getIndentationLevel()) + baseIndent), index == 0));
 
                     if(argsStrings.length - 1 > index)
                     {
@@ -455,11 +482,11 @@ export abstract class FormatterBase implements Formatter
             {
                 argsStrings[0] = argsStrings[0].trim();
 
-                writer.writeLine(sourceText);
+                writer.writeLine(start);
                 writer.write(this._writeBlock(argsStrings[0], expr.getIndentationLevel(), false));
             }
 
-            writer.write(")");
+            writer.write(end!);
         });
     }
 }

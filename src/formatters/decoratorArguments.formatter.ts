@@ -66,14 +66,7 @@ export class DecoratorArgumentsFormatter extends FormatterBase implements Format
             let args = expression.getArguments();
             let argsStrings = args.map(arg => arg.getFullText());
 
-            for(let arg of args)
-            {
-                expression.removeArgument(arg);
-            };
-
-            sourceText = expression.getFullText();
-
-            this._alignExpressionArguments(expression, sourceText, argsStrings, 1 + (expression.getIndentationLevel() * 4));
+            this._alignExpressionArguments(expression, this._getSplitFunctionSource(expression), argsStrings, 1 + (expression.getIndentationLevel() * 4));
         });
     }
 }
