@@ -8,5 +8,6 @@
 - formatter built on top of *Typescript formatter*
 - *formatter*
     - supports reformating of *import* statements
+    - supports reordering of *import* statements
     - supports reformating of *decorator* declarations
     - supports reformating of *constructor* parameters declaration

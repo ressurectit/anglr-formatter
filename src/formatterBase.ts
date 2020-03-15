@@ -1,5 +1,5 @@
 import CodeBlockWriter from 'code-block-writer';
-import {SourceFile, Node, CallExpression} from 'ts-morph';
+import {SourceFile, Node, CallExpression, ConstructorDeclaration, FunctionDeclaration, MethodDeclaration} from 'ts-morph';
 import * as extend from 'extend';
 
 import {NewLineType} from './misc';
@@ -104,6 +104,64 @@ export abstract class FormatterBase implements Formatter
     }
 
     /**
+     * Gets source text for specified range
+     * @param from - Start index of source text
+     * @param to - End index of source text
+     */
+    protected _getSourceText(from: number, to: number): string
+    {
+        return this._sourceFile.getFullText()
+            .substring(from, to)
+            .trim();
+    }
+
+    /**
+     * Splits source into 3 parts using cut, if cut start is less that zero whole expression source will be returned in first item, rest will be null
+     * @param exprStart - Start index of all expression
+     * @param exprEnd - End index of all expression
+     * @param cutStart - Start index of cut
+     * @param cutEnd - End index of cut
+     */
+    protected _getSplitSourceText(exprStart: number, exprEnd: number, cutStart: number, cutEnd: number): [string, string|null, string|null]
+    {
+        return [this._getSourceText(exprStart, cutStart < 0 ? exprEnd : cutStart), cutStart < 0 ? null : this._getSourceText(cutStart, cutEnd), cutStart < 0 ? null : this._getSourceText(cutEnd, exprEnd)];
+    }
+
+    /**
+     * Gets split source into 3 parts, before arguments, arguments and after arguments, if there are no arguments only first item will be set, rest is null
+     * @param expr - Expression which will be split into 3 part source texts
+     */
+    protected _getSplitFunctionSource(expr: CallExpression|ConstructorDeclaration|FunctionDeclaration|MethodDeclaration): [string, string|null, string|null]
+    {
+        let argsParsStart: number;
+        let argsParsEnd: number = 0;
+        let argsPars: Node[];
+
+        //extract indexes of call arguments, parameters
+        if(expr instanceof CallExpression)
+        {
+            argsPars = expr.getArguments();
+        }
+        else
+        {
+            argsPars = expr.getParameters();
+        }
+
+        //no arguments
+        if(!argsPars.length)
+        {
+            argsParsStart = -1;
+        }
+        else
+        {
+            argsParsStart = argsPars[0].getFullStart();
+            argsParsEnd = argsPars[argsPars.length - 1].getEnd();
+        }
+
+        return this._getSplitSourceText(expr.getFullStart(), expr.getEnd(), argsParsStart, argsParsEnd);
+    }
+
+    /**
      * Write changes of code to node
      * @param node - Node which content will be replaced
      * @param indLevel - Indentation level
@@ -195,20 +253,29 @@ export abstract class FormatterBase implements Formatter
     }
 
     /**
+     * Gets generator iterating over array
+     * @param array - Array of items to be itered through using generator
+     */
+    protected _getGenerator<TItem>(array: Array<TItem>): Generator<TItem, void, unknown>
+    {
+        return function*(items: Array<TItem>)
+        {
+            for(let item of items)
+            {
+                yield item;
+            }
+        }(array);
+    }
+
+    /**
      * Gets line generator for provided text
      * @param text - Text to be split into lines
      */
     protected _getLineGenerator(text: string): Generator<string, void, unknown>
     {
-        return function*(text: string, eol: string)
-        {
-            let lines = text.split(eol);
+        let lines = text.split(this._eol);
 
-            for(let line of lines)
-            {
-                yield line;
-            }
-        }(text, this._eol);
+        return this._getGenerator(lines);
     }
 
     /**

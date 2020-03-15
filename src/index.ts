@@ -1,3 +1,4 @@
+import {FormatCodeSettings} from 'ts-morph';
 import * as path from 'path';
 import * as fs from 'fs';
 import * as chalk from 'chalk';
@@ -6,6 +7,7 @@ import * as yargs from 'yargs';
 import * as extend from 'extend';
 
 import {AnglrFileFormatter} from './anglrFileFormatter';
+import {FormatterOptions} from './formatters/formatters.interface';
 
 /**
  * Configuration arguments from command line
@@ -23,6 +25,26 @@ interface AnglrFormatterArgs
  */
 export class AnglrFormatter
 {
+    //######################### private fields #########################
+
+    /**
+     * Typescript formatter options
+     */
+    private _tsOptions: FormatCodeSettings;
+
+    /**
+     * Anglr formatter options
+     */
+    private _anglrOptions: FormatterOptions;
+
+    //######################### constructor #########################
+    constructor(tsOptions?: FormatCodeSettings,
+                anglrOptions?: FormatterOptions)
+    {
+        this._tsOptions = tsOptions ?? {};
+        this._anglrOptions = anglrOptions ?? {};
+    }
+
     //######################### public methods #########################
 
     /**
@@ -59,9 +81,8 @@ export class AnglrFormatter
             return;
         }
 
-        //TODO - add way to provide options
-        fileFormatter.typescriptFormat();
-        fileFormatter.anglrFormat();
+        fileFormatter.typescriptFormat(this._tsOptions);
+        fileFormatter.anglrFormat(this._anglrOptions);
         fileFormatter.save();
     }
 }
@@ -69,10 +90,12 @@ export class AnglrFormatter
 /**
  * Performs anglr formatting
  * @param filePath - Path to file that is going to be formatted
+ * @param tsOptions - Typescript formatting options
+ * @param anglrOptions - Anglr formatting options
  */
-export function format(filePath: string)
+export function format(filePath: string, tsOptions?: FormatCodeSettings, anglrOptions?: FormatterOptions)
 {
-    new AnglrFormatter().formatFile(filePath);
+    new AnglrFormatter(tsOptions, anglrOptions).formatFile(filePath);
 }
 
 /**

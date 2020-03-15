@@ -3,7 +3,7 @@ import * as extend from 'extend';
 import * as chalk from 'chalk';
 import {Project, SourceFile, FormatCodeSettings} from 'ts-morph';
 
-import {FormatterType} from './formatters/formatters.interface';
+import {FormatterType, FormatterOptions} from './formatters/formatters.interface';
 import {NewLineType} from './misc';
 import {ImportFormatter, DecoratorArgumentsFormatter, CallExpressionArgumentsFormatter, ConstructorParametersFormatter} from './formatters';
 
@@ -65,9 +65,9 @@ export class AnglrFileFormatter
 
     /**
      * Applies typescript formatting engine
-     * @param format - Custom format settings
+     * @param options - Custom format options
      */
-    public typescriptFormat(format: FormatCodeSettings = {}): void
+    public typescriptFormat(options: FormatCodeSettings = {}): void
     {
         this._sourceFile.formatText(extend(true,
                                     {},
@@ -80,16 +80,17 @@ export class AnglrFileFormatter
                                         insertSpaceAfterOpeningAndBeforeClosingNonemptyBraces: false,
                                         newLineCharacter: '\n'
                                     },
-                                    format));
+                                    options));
     }
 
     /**
      * Applies anglr typescript fromatting
+     * @param options - Formatter options
      */
-    public anglrFormat(): void
+    public anglrFormat(options: FormatterOptions = {}): void
     {
         this._formatters
-            .map(type => new type(this._eol, this._sourceFile))
+            .map(formatterType => new formatterType(this._eol, this._sourceFile, options))
             .forEach(formatter => formatter.format());
     }
 
