@@ -7,7 +7,7 @@ import {Formatter} from './formatters.interface';
 /**
  * Class that represents formatter for formatting constructors params
  */
-export class ConstructorFormatter extends FormatterBase implements Formatter
+export class ConstructorParametersFormatter extends FormatterBase implements Formatter
 {
     //######################### public methods #########################
 

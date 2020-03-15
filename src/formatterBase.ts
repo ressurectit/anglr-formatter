@@ -1,8 +1,17 @@
 import CodeBlockWriter from 'code-block-writer';
-import {SourceFile, Node} from 'ts-morph';
+import {SourceFile, Node, CallExpression} from 'ts-morph';
+import * as extend from 'extend';
 
 import {NewLineType} from './misc';
-import {Formatter} from './formatters/formatters.interface';
+import {Formatter, FormatterOptions} from './formatters/formatters.interface';
+
+/**
+ * Default options if no other options provided
+ */
+const defaultOptions: FormatterOptions =
+{
+    reoderImports: true
+};
 
 /**
  * Class that represents base formatter class
@@ -21,10 +30,21 @@ export abstract class FormatterBase implements Formatter
      */
     protected _eol: NewLineType;
 
+    /**
+     * Options for formatter
+     */
+    protected _options: FormatterOptions;
+
     //######################### constructor #########################
     constructor(eol: NewLineType,
-                sourceFile: SourceFile)
+                sourceFile: SourceFile,
+                options?: FormatterOptions)
     {
+        this._options = extend(true,
+                               {},
+                               defaultOptions,
+                               options);
+
         this._eol = eol;
         this._sourceFile = sourceFile;
 
@@ -70,7 +90,6 @@ export abstract class FormatterBase implements Formatter
      * Writes source file string as char codes
      * @param source - Source to be written as char codes
      */
-    //@ts-ignore
     protected _debugSource(source: string)
     {
         let chars = [];
@@ -95,7 +114,7 @@ export abstract class FormatterBase implements Formatter
         node.replaceWithText(writer =>
         {
             writer.queueIndentationLevel(indLevel);
-
+            
             writer.write(source);
         });
     }
@@ -198,6 +217,7 @@ export abstract class FormatterBase implements Formatter
      */
     protected _formatJsonString(jsonText: string): string
     {
+        jsonText = jsonText.trim();
         jsonText = jsonText.replace(/^\s+/gm, '');
 
         //skip singleline objects
@@ -327,5 +347,52 @@ export abstract class FormatterBase implements Formatter
 
             writer.writeLine(lineText);
         }
+    }
+
+    /**
+     * Replaces source text of call expression, aligning expression arguments
+     * @param expr - Call expression to be which args should be aligned
+     * @param sourceText - Source text of expression
+     * @param argsStrings - New args as source strings
+     * @param baseIndent - Base indent which is added
+     */
+    protected _alignExpressionArguments(expr: CallExpression, sourceText: string, argsStrings: string[], baseIndent: number = 0)
+    {
+        expr.replaceWithText(writer =>
+        {
+            sourceText = sourceText.replace(/\)\s*$/, '');
+            sourceText = sourceText.replace(/\(\s+/, '(');
+            
+            writer.queueIndentationLevel(0);
+
+            //align parameters at first arg
+            if(argsStrings.length > 1)
+            {
+                writer.write(sourceText);
+
+                argsStrings.forEach((arg, index) =>
+                {
+                    arg = arg.trim();
+
+                    writer.write(this._writeBlock(arg, this._getIndentText(sourceText.length + baseIndent), index == 0));
+
+                    if(argsStrings.length - 1 > index)
+                    {
+                        writer.write(',');
+                        writer.newLine();
+                    }
+                });
+            }
+            //align parameters at start of expression
+            else
+            {
+                argsStrings[0] = argsStrings[0].trim();
+
+                writer.writeLine(sourceText);
+                writer.write(this._writeBlock(argsStrings[0], expr.getIndentationLevel(), false));
+            }
+
+            writer.write(")");
+        });
     }
 }

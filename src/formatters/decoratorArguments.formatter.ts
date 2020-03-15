@@ -5,9 +5,9 @@ import {FormatterBase} from '../formatterBase';
 import {Formatter} from './formatters.interface';
 
 /**
- * Class that represents formatter for formatting decorators
+ * Class that represents formatter for formatting decorator arguments
  */
-export class DecoratorFormatter extends FormatterBase implements Formatter
+export class DecoratorArgumentsFormatter extends FormatterBase implements Formatter
 {
     //######################### public methods #########################
 
@@ -73,42 +73,7 @@ export class DecoratorFormatter extends FormatterBase implements Formatter
 
             sourceText = expression.getFullText();
 
-            expression.replaceWithText(writer =>
-            {
-                sourceText = sourceText.replace(/\)\s*$/, '');
-                sourceText = sourceText.replace(/\(\s+/, '(');
-                
-                writer.queueIndentationLevel(0);
-
-                //align parameters at first arg
-                if(args.length > 1)
-                {
-                    writer.write(sourceText);
-
-                    argsStrings.forEach((arg, index) =>
-                    {
-                        arg = arg.trim();
-
-                        writer.write(this._writeBlock(arg, this._getIndentText(sourceText.length + 1 + (expression.getIndentationLevel() * 4)), index == 0));
-
-                        if(argsStrings.length - 1 > index)
-                        {
-                            writer.write(',');
-                            writer.newLine();
-                        }
-                    });
-                }
-                //align parameters at start of expression
-                else
-                {
-                    argsStrings[0] = argsStrings[0].trim();
-
-                    writer.writeLine(sourceText);
-                    writer.write(this._writeBlock(argsStrings[0], expression.getIndentationLevel(), false));
-                }
-
-                writer.write(")");
-            });
+            this._alignExpressionArguments(expression, sourceText, argsStrings, 1 + (expression.getIndentationLevel() * 4));
         });
     }
 }

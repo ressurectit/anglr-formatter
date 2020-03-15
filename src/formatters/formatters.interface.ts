@@ -3,6 +3,17 @@ import {SourceFile} from 'ts-morph';
 import {NewLineType} from '../misc';
 
 /**
+ * Options for formatters
+ */
+export interface FormatterOptions
+{
+    /**
+     * Indication that imports should be reordered
+     */
+    reoderImports?: boolean;
+}
+
+/**
  * Definition of custom formatter
  */
 export interface Formatter
@@ -18,5 +29,5 @@ export interface Formatter
  */
 export interface FormatterType
 {
-    new(eol: NewLineType, sourceFile: SourceFile): Formatter;
+    new(eol: NewLineType, sourceFile: SourceFile, options?: FormatterOptions): Formatter;
 }

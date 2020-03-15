@@ -5,7 +5,7 @@ import {Project, SourceFile, FormatCodeSettings} from 'ts-morph';
 
 import {FormatterType} from './formatters/formatters.interface';
 import {NewLineType} from './misc';
-import {ImportFormatter, DecoratorFormatter, CallExpressionFormatter, ConstructorFormatter} from './formatters';
+import {ImportFormatter, DecoratorArgumentsFormatter, CallExpressionArgumentsFormatter, ConstructorParametersFormatter} from './formatters';
 
 /**
  * Class that represents instance of formatter for one file
@@ -56,9 +56,9 @@ export class AnglrFileFormatter
 
         //registers formatters
         this._formatters.push(ImportFormatter);
-        this._formatters.push(DecoratorFormatter);
-        this._formatters.push(ConstructorFormatter);
-        this._formatters.push(CallExpressionFormatter);
+        this._formatters.push(DecoratorArgumentsFormatter);
+        this._formatters.push(ConstructorParametersFormatter);
+        this._formatters.push(CallExpressionArgumentsFormatter);
     }
 
     //######################### public methods #########################
