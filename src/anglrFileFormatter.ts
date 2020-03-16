@@ -39,6 +39,11 @@ export class AnglrFileFormatter
      */
     private _formatters: FormatterType[] = [];
 
+    /**
+     * Custom format options
+     */
+    private _tsFormatOptions: FormatCodeSettings;
+
     //######################### public properties #########################
 
     /**
@@ -50,7 +55,7 @@ export class AnglrFileFormatter
     }
 
     //######################### constructor #########################
-    constructor(filePathOrContent: string, isContent: boolean = false)
+    constructor(filePathOrContent: string, isContent: boolean = false, options: FormatCodeSettings = {})
     {
         this._project = new Project();
 
@@ -70,7 +75,21 @@ export class AnglrFileFormatter
             throw new Error(`Source file '${filePathOrContent}' could not be found!`);
         }
 
+        this._tsFormatOptions = extend(true,
+                                       {},
+                                       {
+                                           placeOpenBraceOnNewLineForControlBlocks: true,
+                                           placeOpenBraceOnNewLineForFunctions: true,
+                                           convertTabsToSpaces: true,
+                                           indentSize: 4,
+                                           tabSize: 4,
+                                           insertSpaceAfterOpeningAndBeforeClosingNonemptyBraces: false,
+                                           newLineCharacter: '\n'
+                                       },
+                                       options)
+
         this._originalEol = this._getEOL(this._sourceFile.getFullText());
+        this._sourceFile.replaceWithText(this._sourceFile.getFullText().replace(/\r\n/g, '\n'));
 
         //registers formatters
         this._formatters.push(ImportFormatter);
@@ -83,22 +102,10 @@ export class AnglrFileFormatter
 
     /**
      * Applies typescript formatting engine
-     * @param options - Custom format options
      */
-    public typescriptFormat(options: FormatCodeSettings = {}): void
+    public typescriptFormat(): void
     {
-        this._sourceFile.formatText(extend(true,
-                                    {},
-                                    {
-                                        placeOpenBraceOnNewLineForControlBlocks: true,
-                                        placeOpenBraceOnNewLineForFunctions: true,
-                                        convertTabsToSpaces: true,
-                                        indentSize: 4,
-                                        tabSize: 4,
-                                        insertSpaceAfterOpeningAndBeforeClosingNonemptyBraces: false,
-                                        newLineCharacter: '\n'
-                                    },
-                                    options));
+        this._sourceFile.formatText(this._tsFormatOptions);
     }
 
     /**
@@ -108,7 +115,7 @@ export class AnglrFileFormatter
     public anglrFormat(options: FormatterOptions = {}): void
     {
         this._formatters
-            .map(formatterType => new formatterType(this._eol, this._sourceFile, options))
+            .map(formatterType => new formatterType(this._eol, this._sourceFile, this._tsFormatOptions, options))
             .forEach(formatter => formatter.format());
 
         this._sourceFile.replaceWithText(this._sourceFile.getFullText().replace(/\n/g, this._originalEol));

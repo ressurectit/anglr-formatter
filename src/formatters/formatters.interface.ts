@@ -1,4 +1,4 @@
-import {SourceFile} from 'ts-morph';
+import {SourceFile, FormatCodeSettings} from 'ts-morph';
 
 import {NewLineType} from '../misc';
 
@@ -49,5 +49,5 @@ export interface Formatter
  */
 export interface FormatterType
 {
-    new(eol: NewLineType, sourceFile: SourceFile, options?: FormatterOptions): Formatter;
+    new(eol: NewLineType, sourceFile: SourceFile, tsOptions: FormatCodeSettings, anglrOptions?: FormatterOptions): Formatter;
 }

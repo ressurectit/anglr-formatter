@@ -41,6 +41,8 @@ export class DecoratorArgumentsFormatter extends FormatterBase implements Format
                 return;
             }
 
+            expression.formatText(this._tsFormatOptions);
+
             let sourceText = expression.getFullText();
 
             //skip singleline decorators

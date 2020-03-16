@@ -1,5 +1,5 @@
 import CodeBlockWriter from 'code-block-writer';
-import {SourceFile, Node, CallExpression, ConstructorDeclaration, FunctionDeclaration, MethodDeclaration} from 'ts-morph';
+import {SourceFile, Node, CallExpression, ConstructorDeclaration, FunctionDeclaration, MethodDeclaration, FormatCodeSettings} from 'ts-morph';
 import * as extend from 'extend';
 
 import {NewLineType, SplitSourceText} from './misc';
@@ -39,15 +39,22 @@ export abstract class FormatterBase implements Formatter
      */
     protected _options: FormatterOptions;
 
+    /**
+     * Custom format options
+     */
+    protected _tsFormatOptions: FormatCodeSettings;
+
     //######################### constructor #########################
     constructor(eol: NewLineType,
                 sourceFile: SourceFile,
-                options?: FormatterOptions)
+                tsOptions: FormatCodeSettings,
+                anglrOptions?: FormatterOptions)
     {
+        this._tsFormatOptions = tsOptions;
         this._options = extend(true,
                                {},
                                defaultOptions,
-                               options);
+                               anglrOptions);
 
         this._eol = eol;
         this._sourceFile = sourceFile;

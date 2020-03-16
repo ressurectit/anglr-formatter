@@ -50,8 +50,9 @@ export class AnglrFormatter
     /**
      * Formats file at specified path
      * @param filePath - Path to be formatted
+     * @param skipTypescriptFormat - Indication whether skip typescript format before anglr formatters, defaults to false
      */
-    public formatFile(filePath: string): void
+    public formatFile(filePath: string, skipTypescriptFormat: boolean = false): void
     {
         if(!fs.existsSync(filePath))
         {
@@ -72,7 +73,7 @@ export class AnglrFormatter
         try
         {
             console.log(chalk.whiteBright(`Formatting file '${filePath}'.`));
-            fileFormatter = new AnglrFileFormatter(filePath);
+            fileFormatter = new AnglrFileFormatter(filePath, false, this._tsOptions);
         }
         catch(e)
         {
@@ -81,7 +82,11 @@ export class AnglrFormatter
             return;
         }
 
-        fileFormatter.typescriptFormat(this._tsOptions);
+        if(!skipTypescriptFormat)
+        {
+            fileFormatter.typescriptFormat();
+        }
+            
         fileFormatter.anglrFormat(this._anglrOptions);
         fileFormatter.save();
     }
@@ -89,15 +94,16 @@ export class AnglrFormatter
     /**
      * Formats provided content
      * @param content - Content that is going to be formatted
+     * @param skipTypescriptFormat - Indication whether skip typescript format before anglr formatters, defaults to false
      */
-    public formatFileContent(content: string): string|null
+    public formatFileContent(content: string, skipTypescriptFormat: boolean = false): string|null
     {
         let fileFormatter: AnglrFileFormatter;
 
         try
         {
             console.log(chalk.whiteBright(`Formatting file content.`));
-            fileFormatter = new AnglrFileFormatter(content, true);
+            fileFormatter = new AnglrFileFormatter(content, true, this._tsOptions);
         }
         catch(e)
         {
@@ -106,7 +112,11 @@ export class AnglrFormatter
             return null;
         }
 
-        fileFormatter.typescriptFormat(this._tsOptions);
+        if(!skipTypescriptFormat)
+        {
+            fileFormatter.typescriptFormat();
+        }
+        
         fileFormatter.anglrFormat(this._anglrOptions);
         
         return fileFormatter.content;
