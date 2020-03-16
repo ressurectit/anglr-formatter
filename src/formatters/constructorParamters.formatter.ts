@@ -18,6 +18,11 @@ export class ConstructorParametersFormatter extends FormatterBase implements For
      */
     public format(): void
     {
+        if(!this._options.constructorParameterFormatter)
+        {
+            return;
+        }
+
         this._sourceFile.getDescendantsOfKind(ts.SyntaxKind.Constructor).forEach(ctor =>
         {
             //trim parameter whitespaces

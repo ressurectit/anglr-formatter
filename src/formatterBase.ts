@@ -10,7 +10,11 @@ import {Formatter, FormatterOptions} from './formatters/formatters.interface';
  */
 const defaultOptions: FormatterOptions =
 {
-    reoderImports: true
+    reoderImports: true,
+    callExpressionArgumentsFormatter: true,
+    constructorParameterFormatter: true,
+    decoratorArgumentsFormatter: true,
+    importFormatter: true
 };
 
 /**
@@ -385,7 +389,7 @@ export abstract class FormatterBase implements Formatter
             }
 
             //handle array end new alignment
-            if(!!(match = /(?!^)],\s*$/.exec(lineText)))
+            if(!!(match = /^(?:(?!\[).)+],\s*$/.exec(lineText)))
             {
                 writer.writeLine(lineText);
                 writer.setIndentationLevel(level - 1);

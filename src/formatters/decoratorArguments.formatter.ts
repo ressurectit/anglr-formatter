@@ -16,6 +16,11 @@ export class DecoratorArgumentsFormatter extends FormatterBase implements Format
      */
     public format(): void
     {
+        if(!this._options.decoratorArgumentsFormatter)
+        {
+            return;
+        }
+
         this._sourceFile.getDescendantsOfKind(ts.SyntaxKind.Decorator).forEach(decorator =>
         {
             let parentDeclaration = decorator.getParent();

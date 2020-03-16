@@ -15,6 +15,11 @@ export class ImportFormatter extends FormatterBase implements Formatter
      */
     public format(): void
     {
+        if(!this._options.importFormatter)
+        {
+            return;
+        }
+
         //formats imports into one line imports, removes spaces
         this._sourceFile.getStatements()
             .forEach($import =>

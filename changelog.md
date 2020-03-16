@@ -7,10 +7,11 @@
     - support for *input* patter using globs
 - formatter built on top of *Typescript formatter*
 - *formatter*
+    - supports disabling/enabling each formatter
     - supports formating of files
     - supports formating of provided content string
     - supports reformating of *import* statements
     - supports reordering of *import* statements
     - supports reformating of *decorator* declarations
     - supports reformating of *constructor* parameters declaration
-    - supports reformating of *call expression* arguments
+    - supports reformating of *call expression* arguments (experimental)

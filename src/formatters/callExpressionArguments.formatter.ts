@@ -16,6 +16,11 @@ export class CallExpressionArgumentsFormatter extends FormatterBase implements F
      */
     public format(): void
     {
+        if(!this._options.callExpressionArgumentsFormatter)
+        {
+            return;
+        }
+
         this._sourceFile.getDescendantsOfKind(ts.SyntaxKind.CallExpression)
             .filter(callExpr => (callExpr.getFirstAncestorByKind(ts.SyntaxKind.VariableStatement) ||
                                  callExpr.getFirstAncestorByKind(ts.SyntaxKind.ReturnStatement) ||

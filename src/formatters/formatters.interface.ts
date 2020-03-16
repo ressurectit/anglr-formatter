@@ -11,6 +11,26 @@ export interface FormatterOptions
      * Indication that imports should be reordered
      */
     reoderImports?: boolean;
+
+    /**
+     * Indication whether is call expression arguments formatter enabled
+     */
+    callExpressionArgumentsFormatter?: boolean;
+
+    /**
+     * Indication whether is constructor formatter enabled
+     */
+    constructorParameterFormatter?: boolean;
+
+    /**
+     * Indication whether is decorator arguments formatter enabled
+     */
+    decoratorArgumentsFormatter?: boolean;
+
+    /**
+     * Indication whether is import formatter enabled
+     */
+    importFormatter?: boolean;
 }
 
 /**
