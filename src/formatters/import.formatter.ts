@@ -163,17 +163,17 @@ export class ImportFormatter extends FormatterBase implements Formatter
                     return 1;
                 }
 
-                if(first.specifier.startsWith("./") && second.specifier.startsWith("./") && first.named && second.named)
+                if(first.specifier.startsWith(".") && second.specifier.startsWith(".") && first.named && second.named)
                 {
                     return 0;
                 }
 
-                if(!first.specifier.startsWith("./") && first.named)
+                if(!first.specifier.startsWith(".") && first.named)
                 {
                     return -1;
                 }
 
-                if(!second.specifier.startsWith("./") && second.named)
+                if(!second.specifier.startsWith(".") && second.named)
                 {
                     return 1;
                 }
@@ -196,7 +196,7 @@ export class ImportFormatter extends FormatterBase implements Formatter
                 return 0;
             });
 
-            let firstRelativeImport = importsInfo.find($imports => $imports.specifier.startsWith("./"));
+            let firstRelativeImport = importsInfo.find($imports => $imports.specifier.startsWith("."));
 
             if(firstRelativeImport)
             {
